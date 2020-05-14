@@ -68,7 +68,7 @@ model_path_glove = global_path + "gloVe_"+ dt_string + txt_path
 
 
 import fasttext
-model = fasttext.train_unsupervised(train_path,thread=threads,epoch=9,dim=dim_vector)
+model = fasttext.train_unsupervised(train_path,thread=threads,epoch=9,dim=dim_vec)
 
 
 # In[44]:
