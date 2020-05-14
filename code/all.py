@@ -438,8 +438,6 @@ subprocess.run(["cp", glove_vectors, model_path_glove])
 # In[279]:
 
 
-get_ipython().run_line_magic('reset', '')
-
 
 # ### Import Models
 
@@ -492,7 +490,7 @@ model_glove = KeyedVectors.load_word2vec_format(path_glove)
 # In[5]:
 
 
-import pandas as pd 
+import pandas as pd
 df = pd.read_csv('../data/eval.csv')
 
 
@@ -526,7 +524,7 @@ df['corpus'] = df['corpus'].apply(lambda corpus: set(corpus.split(" ")))
 # In[9]:
 
 
-# Get name of all companies in eval dataset 
+# Get name of all companies in eval dataset
 vocab = set(df.legal_name)
 
 
@@ -549,7 +547,7 @@ for i,row in df.iterrows():
 
 import pickle
 # Load common names dictionnary
-file = open('../pickledObjects/legal_to_common_names.obj', 'rb') 
+file = open('../utilities/legal_to_common_names.obj', 'rb')
 legal_to_common_name = pickle.load(file)
 
 
@@ -600,13 +598,13 @@ def get_nearest_ft(word):
 
 
 import numpy as np
-def get_composed_word_vector(composed_word,wordVectors): 
+def get_composed_word_vector(composed_word,wordVectors):
     res = []
     for word in composed_word.split():
         if(word.lower() in wordVectors.vocab):
             res.append(wordVectors[word.lower()])
     if(len(res)==0):
-        return res 
+        return res
     return np.mean(res,axis=0)
 
 
@@ -617,7 +615,7 @@ def get_most_similar(word,model,topn=10):
     res = []
     if(len(word.split(" ")) > 0):
         vector = get_composed_word_vector(word,model_glove)
-    else: 
+    else:
         vector = model[word.lower()]
     if(len(vector)>0):
         nearest_words = model.most_similar([vector], topn=topn)
@@ -630,7 +628,7 @@ def get_most_similar(word,model,topn=10):
 
 def score2(legal_name,word_occurences):
     return round((word_occurences / len(df[(df['legal_name'] == legal_name)])),4)
-               
+
 
 
 # In[19]:
@@ -653,7 +651,7 @@ def all_indices(value, qlist):
 
 def compute_score2(dataframe,nearest_words, legal_name,method):
     occurences_words = add_eval_set(df, legal_name,[x[0] for x in nearest_words],method)
-    for word in nearest_words: 
+    for word in nearest_words:
         word.append(score2(legal_name, occurences_words[word[0]]))
 
 
@@ -662,7 +660,7 @@ def compute_score2(dataframe,nearest_words, legal_name,method):
 
 def get_nearest_from_dict(dict_,legal_name,method):
     res = []
-    common_names_dict = dict_[legal_name] 
+    common_names_dict = dict_[legal_name]
     for common_name in common_names_dict.keys():
         #print(dict_[legal_name][common_name])
         res.append(dict_[legal_name][common_name][method])
@@ -693,10 +691,10 @@ def fusion(nearest_words):
     for pairs in list_of_pairs:
         if(len(pairs)>1):
             res.append(fusion_list([x for j,x in enumerate(nearest_words) if j in pairs ]))
-        else: 
+        else:
             res.append(nearest_words[pairs[0]])
     return res
-    
+
 
 
 # In[24]:
@@ -717,7 +715,7 @@ methods = ['ft','w2v','glove']
 # Create dictionnary with nearest vectors
 percent = 0
 start = time.time()
-for i,legal_name in enumerate(vocab): 
+for i,legal_name in enumerate(vocab):
     # Logging
     if(i % 150 == 0):
         time_ = getTime(start,time.time())
@@ -728,9 +726,9 @@ for i,legal_name in enumerate(vocab):
     siren = legal_n_to_siren[legal_name]
     if(siren in legal_to_common_name.keys()):
         common_names = legal_to_common_name[siren]
-        # For each common name compute nearest words per embedding technique 
+        # For each common name compute nearest words per embedding technique
         for common_n in common_names:
-            legal_name_dict[common_n] = create_emb_dict(common_n)     
+            legal_name_dict[common_n] = create_emb_dict(common_n)
     else:
         legal_name_dict[legal_name] = emb_dict
     legal_name_dict = defaultdict(list)
@@ -774,7 +772,7 @@ print(gloveEval)
 import json
 import codecs
 
-with codecs.open('results-with-fusion.json', 'w',indent=4, sort_keys=True,encoding='utf-8') as fp:
+with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
 
 

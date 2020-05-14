@@ -21,7 +21,6 @@ txt_extension = ".txt"
 path_ft =  global_path + "ft_"+ dt_string + txt_extension
 path_w2v =  global_path + "w2v_"+ dt_string + model_path
 path_glove = global_path + "gloVe_"+ dt_string + txt_extension
-path_glove = "../models/gloVe_13-05-2020.txt"
 
 
 # In[2]:
@@ -339,7 +338,7 @@ print(gloveEval)
 import json
 import codecs
 
-with codecs.open('results-with-fusion.json', 'w',indent=4, sort_keys=True,encoding='utf-8') as fp:
+with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
 
 
