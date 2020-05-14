@@ -1,3 +1,4 @@
 models/*
 data/*
 code/.ipynb_checkpoints/*
+utilities/GloVe/*
