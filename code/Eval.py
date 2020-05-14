@@ -318,7 +318,7 @@ for i,legal_name in enumerate(vocab):
 # In[26]:
 
 
-df.to_csv('results' + dt_string + '.csv')
+df.to_csv('../results/results' + dt_string + '.csv')
 
 
 # In[27]:
@@ -338,7 +338,7 @@ print(gloveEval)
 import json
 import codecs
 
-with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
+with codecs.open('../results/results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
 
 
