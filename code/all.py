@@ -19,17 +19,17 @@ if(not os.path.exists((data_directory))):
 
 corpus_file = 'corpus_check_long.csv'
 corpus_path = data_directory + corpus_file
-# We will create a temporary file with the results of the preprocessing this file will be deleted after 
+# We will create a temporary file with the results of the preprocessing this file will be deleted after
 #the execution of the script
 temp_file_eval = "../data/evalFile.txt"
 
-# File Name where we will store the training data 
+# File Name where we will store the training data
 train_path = data_directory + 'trainFile.txt'
 
 # File name where we will store the evaluation data
 eval_file = data_directory + 'eval.csv'
 
-# Name of the column storing the article 
+# Name of the column storing the article
 article = 'corpus'
 
 
@@ -58,12 +58,12 @@ def get_corrupt_data(df):
         tmp = df.corpus[i]
         if ("�") in tmp:
             indexNames.append(i)
-get_corrupt_data(df)      
+get_corrupt_data(df)
 df.drop(indexNames , inplace=True)
 
 
-# ## Filter : keep only companies that have at least 7 articles, and their 
-# 
+# ## Filter : keep only companies that have at least 7 articles, and their
+#
 
 # In[63]:
 
@@ -85,7 +85,7 @@ df
 
 
 # ## Filter: discard articles that are longer than 100 words
-# 
+#
 
 # In[65]:
 
@@ -93,7 +93,7 @@ df
 import re
 import contractions
 import string
-from nltk.tokenize import sent_tokenize 
+from nltk.tokenize import sent_tokenize
 
 translator = str.maketrans(' ', ' ', string.punctuation)
 
@@ -106,11 +106,11 @@ def cleaning(doc):
     doc = doc.replace('\r\n', ' ')
     doc = doc.replace('\r', ' ')
     doc = doc.replace('\t', ' ')
-    return doc 
+    return doc
 def remove_numbers(doc):
     doc = re.sub("\d+", "", doc)
     doc = doc.replace('m€', '')
-    doc = doc.replace('k€', '')   
+    doc = doc.replace('k€', '')
     return doc
 
 
@@ -120,34 +120,34 @@ def remove_numbers(doc):
 temp_train_name = 'dataTrain'
 temp_eval_name = 'dataEval'
 # Tokenize text
-def preprocessing(doc,train=False):        
+def preprocessing(doc,train=False):
         # Remove «»
         doc = doc.replace("«", " ")
         doc = doc.replace("»", " ")
 
-        # To lowercase 
+        # To lowercase
         doc = doc.lower()
-        
+
         # Remove url's
         doc = re.sub(r'^https?:\/\/.*[\r\n]*', ' ', doc, flags=re.MULTILINE)
-        
+
         # Cleaning
         doc = cleaning(doc)
-        
+
         # Remove numbers
         doc = remove_numbers(doc)
-        
-    
-        # Remove multiple wite spaces 
+
+
+        # Remove multiple wite spaces
         doc = re.sub(' +', ' ',doc)
-        
+
         # Remove unicode breaking character
         doc = doc.replace(u'\xa0', u' ')
-        
-        if train: 
+
+        if train:
             result = []
             sentences = sent_tokenize(doc)
-            for sent in sentences: 
+            for sent in sentences:
                    # Remove punctuation
                 sent = sent.translate(translator)
                 sent += "\n"
@@ -155,7 +155,7 @@ def preprocessing(doc,train=False):
             return "".join(result)
         else:
             doc += "\n"
-            return doc 
+            return doc
 
 def preprocess_and_write_to_file(dataframe,train,index=0):
     if(train):
@@ -169,11 +169,11 @@ def preprocess_and_write_to_file(dataframe,train,index=0):
             print("Thread " + str(index) + "processed " + str(counter) + "/" + str(dataframe.count()))
         preprocessed_text = preprocessing((row[article]),train)
         f.write(preprocessed_text)  # python will convert \n to os.linesep
-    f.close()  
+    f.close()
 
 
-# We want to create two files: one for training which will consist of each sentence of each document per line and 
-# an eval file which will be in csv format containing the name of the article, the url it originated from and the 
+# We want to create two files: one for training which will consist of each sentence of each document per line and
+# an eval file which will be in csv format containing the name of the article, the url it originated from and the
 # preprocessed article itself.
 
 # In[68]:
@@ -213,7 +213,7 @@ def read_file(path):
     with open(path) as f:
         content = f.readlines()
     return content
-    
+
 
 
 # In[73]:
@@ -255,7 +255,6 @@ df
 # In[39]:
 
 
-get_ipython().run_line_magic('reset', '')
 
 
 # # Train
@@ -284,7 +283,7 @@ if(not os.path.exists(model_directory)):
 utilities_path = '../utilities'
 
 # Path of your local glove directory
-glove_path = '../utilities/GloVe/'        
+glove_path = '../utilities/GloVe/'
 train_path = '../data/trainFile.txt'
 
 #Glove Script location
@@ -293,7 +292,7 @@ utility_glove_script = '../utilities/demo.sh'
 # Dimension of vectors
 dim_vec = 300
 
-# Number of threads used during training, should be equal to number of cores if one wants to minimize training time 
+# Number of threads used during training, should be equal to number of cores if one wants to minimize training time
 threads = 4
 
 
@@ -374,7 +373,7 @@ subprocess.run(["rm", path_ft_bin])
 with open(train_path) as f:
     corpus = f.readlines()
 res = []
-for sent in corpus: 
+for sent in corpus:
     sent = sent[0:len(sent)-1]
     res.append(sent.split(" "))
 
@@ -395,8 +394,8 @@ path = get_tmpfile(path_w2v)
 model.save(path_w2v)
 
 
-# ## Glove 
-# 
+# ## Glove
+#
 
 # In[48]:
 

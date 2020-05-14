@@ -4,7 +4,6 @@
 # In[39]:
 
 
-get_ipython().run_line_magic('reset', '')
 
 
 # # Train
@@ -33,7 +32,7 @@ if(not os.path.exists(model_directory)):
 utilities_path = '../utilities'
 
 # Path of your local glove directory
-glove_path = '../utilities/GloVe/'        
+glove_path = '../utilities/GloVe/'
 train_path = '../data/trainFile.txt'
 
 #Glove Script location
@@ -42,7 +41,7 @@ utility_glove_script = '../utilities/demo.sh'
 # Dimension of vectors
 dim_vec = 300
 
-# Number of threads used during training, should be equal to number of cores if one wants to minimize training time 
+# Number of threads used during training, should be equal to number of cores if one wants to minimize training time
 threads = 4
 
 
@@ -123,7 +122,7 @@ subprocess.run(["rm", path_ft_bin])
 with open(train_path) as f:
     corpus = f.readlines()
 res = []
-for sent in corpus: 
+for sent in corpus:
     sent = sent[0:len(sent)-1]
     res.append(sent.split(" "))
 
@@ -144,8 +143,8 @@ path = get_tmpfile(path_w2v)
 model.save(path_w2v)
 
 
-# ## Glove 
-# 
+# ## Glove
+#
 
 # In[48]:
 
