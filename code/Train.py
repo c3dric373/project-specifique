@@ -8,6 +8,7 @@
 # In[1]:
 
 
+print('Starting Training')
 import os
 # Location of models
 model_directory = '../models'
@@ -63,6 +64,7 @@ model_path_glove = global_path + "gloVe_"+ dt_string + txt_path
 
 
 import fasttext
+print('Start Trainin FastText')
 model = fasttext.train_unsupervised(train_path,thread=threads,epoch=9,dim=dim_vec)
 
 
@@ -114,6 +116,7 @@ subprocess.run(["rm", path_ft_bin])
 # In[13]:
 
 
+print('Start Trainin w2vec')
 with open(train_path) as f:
     corpus = f.readlines()
 res = []
@@ -128,8 +131,8 @@ for sent in corpus:
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from gensim.models import Word2Vec
-model = Word2Vec(res, size=300,window=5,negative=10, alpha=0.01,iter=9,
-                 min_count=5, workers=4,sg=1,compute_loss=True)
+model = Word2Vec(res, size=dim_vec,window=5,negative=10, alpha=0.01,iter=9,
+                 min_count=5, workers=threads,sg=1,compute_loss=True)
 
 
 # In[15]:
@@ -165,6 +168,7 @@ glove_vectors = glove_path + "vectors.txt"
 # In[50]:
 
 
+print('Start Trainin GloVe')
 # Copy file into glove directory
 subprocess.check_output(["cp " + train_path + " " + glove_corpus_path],shell=True)
 # Copy the correct file to start gloVe with the right parameters

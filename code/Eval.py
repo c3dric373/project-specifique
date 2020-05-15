@@ -6,6 +6,7 @@
 # In[129]:
 
 
+print('Starting Evaluation')
 utilities_path = '../utilities/'
 model_path = '../models/'
 data_path = '../data/'
@@ -19,7 +20,7 @@ from datetime import datetime
 # datetime object containing current date and time
 now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y")
-dt_string = "13-05-2020"
+#dt_string = "13-05-2020"
 global_path = "../models/"
 model_path = ".model"
 txt_extension = ".txt"
@@ -56,12 +57,6 @@ from gensim.test.utils import common_texts, get_tmpfile,datapath
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.models import KeyedVectors
 model_glove = KeyedVectors.load_word2vec_format(path_glove)
-
-
-# In[138]:
-
-
-model_glove.vocab
 
 
 # ### Import DataSet
@@ -328,22 +323,10 @@ for i,legal_name in enumerate(vocab):
         legal_name_dict[method].insert(0,scores)
 
 
-# In[159]:
-
-
-new_nearest
-
-
-# In[160]:
-
-
-df.sample(20)
-
-
 # In[161]:
 
 
-df.to_csv('results' + dt_string + '.csv')
+df.to_csv(results_path + 'results' + dt_string + '.csv')
 
 
 # In[162]:
@@ -352,9 +335,9 @@ df.to_csv('results' + dt_string + '.csv')
 ftEval = df['eval_number_ft'].mean()
 w2vEval = df['eval_number_w2v'].mean()
 gloveEval = df['eval_number_glove'].mean()
-print(ftEval)
-print(w2vEval)
-print(gloveEval)
+print("Average number of disciminating words per article for fastText:" + str(ftEval))
+print("Average number of disciminating words per article for fastText:" + str(w2vEval))
+print("Average number of disciminating words per article for fastText:" + str(gloveEval))
 
 
 # In[37]:
@@ -363,7 +346,7 @@ print(gloveEval)
 import json
 import codecs
 
-with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
+with codecs.open(results_path + 'results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
 
 

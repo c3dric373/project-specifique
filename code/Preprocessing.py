@@ -51,6 +51,7 @@ prediction_csv_path = utilities_path + 'prediction.csv'
 
 import pickle
 import pandas as pd
+print('Loading DataFrames')
 file = open(prediction_path, 'rb') 
 df_prediction = pd.DataFrame(pickle.load(file))
 df = pd.read_csv(corpus_path)
@@ -177,7 +178,7 @@ def preprocess_and_write_to_file(dataframe,fileName='data',train=False,index=0):
     f = codecs.open(fileName + str(index) + '.txt' , 'w', 'utf-8')
     for counter,data in enumerate(dataframe.iterrows()):
         i, row = data
-        if(counter%third==0):
+        if(counter%third==0 && index == 0):
             print("Thread " + str(index) + " processed " + str(counter) + "/" + str(total_len))
         preprocessed_text = preprocessing((row[article]),train)
         f.write(preprocessed_text)  # python will convert \n to os.linesep
@@ -210,7 +211,6 @@ def multi_thread_preprocessing(dataframe,path,train=True,threads=3):
         temp_file_eval = 'eval_file_tmp'
         merge_file(temp_file_name,temp_file_eval)
         data = read_file(temp_file_eval)
-        print(len(data))
         subprocess.run(["rm", temp_file_eval])
         new_df['corpus'] = data
         new_df.to_csv(path)
@@ -221,28 +221,32 @@ def multi_thread_preprocessing(dataframe,path,train=True,threads=3):
 # In[11]:
 
 
+print('Filtering Dataframes')
 df = filter_dataframe(df)
 df_prediction = filter_dataframe(df_prediction)
 
 
 # ### Preprocessing
 
-# In[197]:
+# In[199]:
 
 
-multi_thread_preprocessing(df_prediction,prediction_file,train=False)
+print('Preprocessing Training File')
+multi_thread_preprocessing(df,train_path,train=True)
 
 
 # In[198]:
 
 
+print('Preprocessing Eval File')
 multi_thread_preprocessing(df,eval_file,train=False)
 
 
-# In[199]:
+# In[197]:
 
 
-multi_thread_preprocessing(df,train_path,train=True)
+print('Preprocessing Prediction File')
+multi_thread_preprocessing(df_prediction,prediction_file,train=False)
 
 
 # In[ ]:

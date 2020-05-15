@@ -51,6 +51,7 @@ prediction_csv_path = utilities_path + 'prediction.csv'
 
 import pickle
 import pandas as pd
+print('Loading DataFrames')
 file = open(prediction_path, 'rb') 
 df_prediction = pd.DataFrame(pickle.load(file))
 df = pd.read_csv(corpus_path)
@@ -177,7 +178,7 @@ def preprocess_and_write_to_file(dataframe,fileName='data',train=False,index=0):
     f = codecs.open(fileName + str(index) + '.txt' , 'w', 'utf-8')
     for counter,data in enumerate(dataframe.iterrows()):
         i, row = data
-        if(counter%third==0):
+        if(counter%third==0 && index == 0):
             print("Thread " + str(index) + " processed " + str(counter) + "/" + str(total_len))
         preprocessed_text = preprocessing((row[article]),train)
         f.write(preprocessed_text)  # python will convert \n to os.linesep
@@ -210,7 +211,6 @@ def multi_thread_preprocessing(dataframe,path,train=True,threads=3):
         temp_file_eval = 'eval_file_tmp'
         merge_file(temp_file_name,temp_file_eval)
         data = read_file(temp_file_eval)
-        print(len(data))
         subprocess.run(["rm", temp_file_eval])
         new_df['corpus'] = data
         new_df.to_csv(path)
@@ -221,28 +221,32 @@ def multi_thread_preprocessing(dataframe,path,train=True,threads=3):
 # In[11]:
 
 
+print('Filtering Dataframes')
 df = filter_dataframe(df)
 df_prediction = filter_dataframe(df_prediction)
 
 
 # ### Preprocessing
 
-# In[197]:
+# In[199]:
 
 
-multi_thread_preprocessing(df_prediction,prediction_file,train=False)
+print('Preprocessing Training File')
+multi_thread_preprocessing(df,train_path,train=True)
 
 
 # In[198]:
 
 
+print('Preprocessing Eval File')
 multi_thread_preprocessing(df,eval_file,train=False)
 
 
-# In[199]:
+# In[197]:
 
 
-multi_thread_preprocessing(df,train_path,train=True)
+print('Preprocessing Prediction File')
+multi_thread_preprocessing(df_prediction,prediction_file,train=False)
 
 
 # In[ ]:
@@ -260,6 +264,7 @@ multi_thread_preprocessing(df,train_path,train=True)
 # In[1]:
 
 
+print('Starting Training')
 import os
 # Location of models
 model_directory = '../models'
@@ -315,6 +320,7 @@ model_path_glove = global_path + "gloVe_"+ dt_string + txt_path
 
 
 import fasttext
+print('Start Trainin FastText')
 model = fasttext.train_unsupervised(train_path,thread=threads,epoch=9,dim=dim_vec)
 
 
@@ -366,6 +372,7 @@ subprocess.run(["rm", path_ft_bin])
 # In[13]:
 
 
+print('Start Trainin w2vec')
 with open(train_path) as f:
     corpus = f.readlines()
 res = []
@@ -380,8 +387,8 @@ for sent in corpus:
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from gensim.models import Word2Vec
-model = Word2Vec(res, size=300,window=5,negative=10, alpha=0.01,iter=9,
-                 min_count=5, workers=4,sg=1,compute_loss=True)
+model = Word2Vec(res, size=dim_vec,window=5,negative=10, alpha=0.01,iter=9,
+                 min_count=5, workers=threads,sg=1,compute_loss=True)
 
 
 # In[15]:
@@ -417,6 +424,7 @@ glove_vectors = glove_path + "vectors.txt"
 # In[50]:
 
 
+print('Start Trainin GloVe')
 # Copy file into glove directory
 subprocess.check_output(["cp " + train_path + " " + glove_corpus_path],shell=True)
 # Copy the correct file to start gloVe with the right parameters
@@ -437,6 +445,7 @@ subprocess.run(["cp", glove_vectors, model_path_glove])
 # In[129]:
 
 
+print('Starting Evaluation')
 utilities_path = '../utilities/'
 model_path = '../models/'
 data_path = '../data/'
@@ -450,7 +459,7 @@ from datetime import datetime
 # datetime object containing current date and time
 now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y")
-dt_string = "13-05-2020"
+#dt_string = "13-05-2020"
 global_path = "../models/"
 model_path = ".model"
 txt_extension = ".txt"
@@ -487,12 +496,6 @@ from gensim.test.utils import common_texts, get_tmpfile,datapath
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.models import KeyedVectors
 model_glove = KeyedVectors.load_word2vec_format(path_glove)
-
-
-# In[138]:
-
-
-model_glove.vocab
 
 
 # ### Import DataSet
@@ -759,22 +762,10 @@ for i,legal_name in enumerate(vocab):
         legal_name_dict[method].insert(0,scores)
 
 
-# In[159]:
-
-
-new_nearest
-
-
-# In[160]:
-
-
-df.sample(20)
-
-
 # In[161]:
 
 
-df.to_csv('results' + dt_string + '.csv')
+df.to_csv(results_path + 'results' + dt_string + '.csv')
 
 
 # In[162]:
@@ -783,9 +774,9 @@ df.to_csv('results' + dt_string + '.csv')
 ftEval = df['eval_number_ft'].mean()
 w2vEval = df['eval_number_w2v'].mean()
 gloveEval = df['eval_number_glove'].mean()
-print(ftEval)
-print(w2vEval)
-print(gloveEval)
+print("Average number of disciminating words per article for fastText:" + str(ftEval))
+print("Average number of disciminating words per article for fastText:" + str(w2vEval))
+print("Average number of disciminating words per article for fastText:" + str(gloveEval))
 
 
 # In[37]:
@@ -794,7 +785,7 @@ print(gloveEval)
 import json
 import codecs
 
-with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
+with codecs.open(results_path + 'results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
 
 
