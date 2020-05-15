@@ -42,7 +42,7 @@ utility_glove_script = '../utilities/demo.sh'
 dim_vec = 300
 
 # Number of threads used during training, should be equal to number of cores if one wants to minimize training time
-threads = 4
+threads = 2
 
 
 # In[7]:
@@ -131,8 +131,8 @@ for sent in corpus:
 
 
 from gensim.models import Word2Vec
-model = Word2Vec(res, size=300,window=5,negative=10, alpha=0.01,iter=9,
-                 min_count=5, workers=4,sg=1,compute_loss=True)
+model = Word2Vec(res, size=dim_vec,window=5,negative=10, alpha=0.01,iter=9,
+                 min_count=5, workers=threads,sg=1,compute_loss=True)
 
 
 # In[8]:

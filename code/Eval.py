@@ -14,7 +14,7 @@ from datetime import datetime
 # datetime object containing current date and time
 now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y")
-#dt_string = "13-05-2020"
+dt_string = "13-05-2020"
 global_path = "../models/"
 model_path = ".model"
 txt_extension = ".txt"

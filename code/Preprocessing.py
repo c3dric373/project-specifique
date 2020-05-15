@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
+
 # ## SetUp directories
 
-# In[58]:
+# In[1]:
 
 
 import os
@@ -12,142 +14,134 @@ if(not os.path.exists((data_directory))):
      os.makedirs(data_directory)
 
 
+# # Preprocessing
+
 # ## SetUp Parameters
 
-# In[59]:
+# In[2]:
+
+
 
 
 corpus_file = 'corpus_check_long.csv'
 corpus_path = data_directory + corpus_file
-# We will create a temporary file with the results of the preprocessing this file will be deleted after 
+# We will create a temporary file with the results of the preprocessing this file will be deleted after
 #the execution of the script
 temp_file_eval = "../data/evalFile.txt"
 
-# File Name where we will store the training data 
+# File Name where we will store the training data
 train_path = data_directory + 'trainFile.txt'
 
 # File name where we will store the evaluation data
 eval_file = data_directory + 'eval.csv'
 
-# Name of the column storing the article 
+# Prediction File
+prediction_file = data_directory + 'prediction.csv'
+
+# Name of the column storing the article
 article = 'corpus'
 
+utilities_path = '../utilities/'# DataSetPath
+prediction_path = utilities_path + 'groupC_scrap.obj'
+prediction_csv_path = utilities_path + 'prediction.csv'
 
-# # Preprocessing
 
-# In[60]:
+# ## Load Datasets to preprocess
+
+# In[3]:
 
 
+import pickle
 import pandas as pd
+file = open(prediction_path, 'rb')
+df_prediction = pd.DataFrame(pickle.load(file))
 df = pd.read_csv(corpus_path)
 
 
-# In[61]:
+# In[4]:
 
 
-df
-
-
-# In[62]:
-
-
-indexNames = []
 def get_corrupt_data(df):
+    indexNames = []
     for counter,data in enumerate(df.iterrows()):
         i, row = data
         tmp = df.corpus[i]
-        if ("�") in tmp:
+        if (("�") in tmp) or (len(tmp.split())<50):
             indexNames.append(i)
-get_corrupt_data(df)      
-df.drop(indexNames , inplace=True)
+    return indexNames
 
 
-# ## Filter : keep only companies that have at least 7 articles, and their 
-# 
 
-# In[63]:
+# In[5]:
 
 
-#Build list of companies that have more then 7 articles in the corpora
-top = df["siren"].value_counts()
-top = top.where(top>=7).dropna()
-topList = list(top.index)
-df = df[df["siren"].isin(topList)]
+def filter_dataframe(dataframe):
+    # Remove corrupt Data and filter articles that have less than 50 words
+    indexNames = get_corrupt_data(dataframe)
+    dataframe.drop(indexNames , inplace=True)
+
+    # Filter companies that have at least 7 articles
+    top = dataframe["siren"].value_counts()
+    top = top.where(top>=7).dropna()
+    topList = list(top.index)
+    dataframe = dataframe[dataframe["siren"].isin(topList)]
+
+    # Filter articles longer than 1,000,000 characters
+    dataframe = dataframe[dataframe[article].astype(str).map(len)<1000000]
+
+    return dataframe
 
 
-# ## Filter: discard articles that are longer than 1,000,000 characters
 
-# In[64]:
-
-
-df = df[df[article].astype(str).map(len)<1000000]
-df
-
-
-# ## Filter: discard articles that are longer than 100 words
-# 
-
-# In[65]:
+# In[6]:
 
 
 import re
-import contractions
 import string
-from nltk.tokenize import sent_tokenize 
-
-translator = str.maketrans(' ', ' ', string.punctuation)
-
-
-# In[66]:
-
-
+from nltk.tokenize import sent_tokenize
 def cleaning(doc):
     doc = doc.replace('\n', ' ')
     doc = doc.replace('\r\n', ' ')
     doc = doc.replace('\r', ' ')
     doc = doc.replace('\t', ' ')
-    return doc 
+    return doc
 def remove_numbers(doc):
     doc = re.sub("\d+", "", doc)
     doc = doc.replace('m€', '')
-    doc = doc.replace('k€', '')   
+    doc = doc.replace('k€', '')
     return doc
-
-
-# In[67]:
-
-
-temp_train_name = 'dataTrain'
-temp_eval_name = 'dataEval'
 # Tokenize text
-def preprocessing(doc,train=False):        
+def preprocessing(doc,train=False):
+        # Translator used to remove punctuation
+        translator = str.maketrans(' ', ' ', string.punctuation)
+
         # Remove «»
         doc = doc.replace("«", " ")
         doc = doc.replace("»", " ")
 
-        # To lowercase 
+        # To lowercase
         doc = doc.lower()
-        
+
         # Remove url's
         doc = re.sub(r'^https?:\/\/.*[\r\n]*', ' ', doc, flags=re.MULTILINE)
-        
+
         # Cleaning
         doc = cleaning(doc)
-        
+
         # Remove numbers
         doc = remove_numbers(doc)
-        
-    
-        # Remove multiple wite spaces 
+
+
+        # Remove multiple wite spaces
         doc = re.sub(' +', ' ',doc)
-        
+
         # Remove unicode breaking character
         doc = doc.replace(u'\xa0', u' ')
-        
-        if train: 
+
+        if train:
             result = []
             sentences = sent_tokenize(doc)
-            for sent in sentences: 
+            for sent in sentences:
                    # Remove punctuation
                 sent = sent.translate(translator)
                 sent += "\n"
@@ -155,93 +149,102 @@ def preprocessing(doc,train=False):
             return "".join(result)
         else:
             doc += "\n"
-            return doc 
-
-def preprocess_and_write_to_file(dataframe,train,index=0):
-    if(train):
-        fileName = temp_train_name
-    else:
-        fileName = temp_eval_name
-    f = codecs.open(fileName + str(index) + '.txt' , 'w', 'utf-8')
-    for counter,data in enumerate(dataframe.iterrows()):
-        i, row = data
-        if(counter%5000==0):
-            print("Thread " + str(index) + "processed " + str(counter) + "/" + str(dataframe.count()))
-        preprocessed_text = preprocessing((row[article]),train)
-        f.write(preprocessed_text)  # python will convert \n to os.linesep
-    f.close()  
+            return doc
 
 
-# We want to create two files: one for training which will consist of each sentence of each document per line and 
-# an eval file which will be in csv format containing the name of the article, the url it originated from and the 
-# preprocessed article itself.
-
-# In[68]:
-
-
-train_ = [True,False]
-import codecs
-import multiprocessing
-import numpy as np
-chunks = np.array_split(df,3)
-manager = multiprocessing.Manager()
-threads = []
-for train in train_:
-    for index,chunk in enumerate(chunks):
-        thread = multiprocessing.Process(target=preprocess_and_write_to_file, args=(chunk,train,index))
-        thread.start()
-        threads.append(thread)
-    for thread in threads:
-        thread.join()
-
-
-# In[69]:
-
-
-import subprocess
-subprocess.check_output(["cat " + temp_train_name + "*.txt" + ' > ' + train_path],shell=True)
-subprocess.check_output(["cat " + temp_eval_name + "*.txt" + ' > ' + temp_file_eval],shell=True)
-subprocess.check_output(["rm data*.txt"],shell=True)
-
-
-# Creating the Eval csv file
-
-# In[70]:
+# In[7]:
 
 
 def read_file(path):
     with open(path) as f:
         content = f.readlines()
     return content
-    
 
 
-# In[73]:
+
+# In[8]:
 
 
-data = read_file(temp_file_eval)
+def merge_file(temp_file,path):
+    subprocess.check_output(["cat " + temp_file + "*" + ' > ' + path],shell=True)
+    subprocess.check_output(["rm " + temp_file + "*"],shell=True)
 
 
-# In[74]:
+# In[9]:
 
 
-subprocess.run(["rm", temp_file_eval])
+def preprocess_and_write_to_file(dataframe,fileName='data',train=False,index=0):
+    total_len = (len(dataframe))
+    third = int(len(dataframe)/3)
+    f = codecs.open(fileName + str(index) + '.txt' , 'w', 'utf-8')
+    for counter,data in enumerate(dataframe.iterrows()):
+        i, row = data
+        if(counter%third==0):
+            print("Thread " + str(index) + " processed " + str(counter) + "/" + str(total_len))
+        preprocessed_text = preprocessing((row[article]),train)
+        f.write(preprocessed_text)  # python will convert \n to os.linesep
+    f.close()
 
 
-# In[75]:
+# In[10]:
 
 
-df['preprocessedCorpus'] = data
-del df['id']
-del df['corpus']
-df = df.rename({'preprocessedCorpus': article}, axis='columns')
-df.to_csv(eval_file)
+import codecs
+import multiprocessing
+import numpy as np
+import time
+import subprocess
+def multi_thread_preprocessing(dataframe,path,train=True,threads=3):
+    temp_file_name = "tmp_"
+    chunks = np.array_split(dataframe,threads)
+    manager = multiprocessing.Manager()
+    threads = []
+    for index,chunk in enumerate(chunks):
+        thread = multiprocessing.Process(target=preprocess_and_write_to_file, args=(chunk,temp_file_name,train,index))
+        thread.start()
+        threads.append(thread)
+    for thread in threads:
+        thread.join()
+    if(train):
+        merge_file(temp_file_name,path)
+    else:
+        new_df = dataframe.copy()
+        temp_file_eval = 'eval_file_tmp'
+        merge_file(temp_file_name,temp_file_eval)
+        data = read_file(temp_file_eval)
+        print(len(data))
+        subprocess.run(["rm", temp_file_eval])
+        new_df['corpus'] = data
+        new_df.to_csv(path)
 
 
-# In[76]:
+# ### Filter
+
+# In[11]:
 
 
-df
+df = filter_dataframe(df)
+df_prediction = filter_dataframe(df_prediction)
+
+
+# ### Preprocessing
+
+# In[197]:
+
+
+multi_thread_preprocessing(df_prediction,prediction_file,train=False)
+
+
+# In[198]:
+
+
+multi_thread_preprocessing(df,eval_file,train=False)
+
+
+# In[199]:
+
+
+multi_thread_preprocessing(df,train_path,train=True)
 
 
 # In[ ]:
