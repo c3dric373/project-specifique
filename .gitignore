@@ -1,4 +1,5 @@
 models/*
-data/*
+data/*.csv
+data/*.txt
 code/.ipynb_checkpoints/*
 utilities/GloVe/*
