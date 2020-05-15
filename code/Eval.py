@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[279]:
+# ## SetUp Parameters
+
+# In[129]:
 
 
+utilities_path = '../utilities/'
+model_path = '../models/'
+data_path = '../data/'
+results_path = '../results/'
 
-# ### Import Models
 
-# In[1]:
+# In[134]:
 
 
 from datetime import datetime
@@ -23,7 +28,9 @@ path_w2v =  global_path + "w2v_"+ dt_string + model_path
 path_glove = global_path + "gloVe_"+ dt_string + txt_extension
 
 
-# In[2]:
+# ### Import Models
+
+# In[135]:
 
 
 from gensim.test.utils import common_texts, get_tmpfile,datapath
@@ -32,7 +39,7 @@ from gensim.models import KeyedVectors
 model_ft = KeyedVectors.load_word2vec_format(path_ft)
 
 
-# In[3]:
+# In[136]:
 
 
 from gensim.test.utils import common_texts, get_tmpfile,datapath
@@ -42,7 +49,7 @@ model_w2v = Word2Vec.load(path_w2v)
 model_w2v = model_w2v.wv
 
 
-# In[4]:
+# In[137]:
 
 
 from gensim.test.utils import common_texts, get_tmpfile,datapath
@@ -51,29 +58,35 @@ from gensim.models import KeyedVectors
 model_glove = KeyedVectors.load_word2vec_format(path_glove)
 
 
+# In[138]:
+
+
+model_glove.vocab
+
+
 # ### Import DataSet
 
-# In[5]:
+# In[139]:
 
 
-import pandas as pd
+import pandas as pd 
 df = pd.read_csv('../data/eval.csv')
 
 
-# In[6]:
+# In[140]:
 
 
 #df = (df[(df['legal_name'] == "THERADIAG SA")])
 #df=df.sample(10)
 
 
-# In[7]:
+# In[141]:
 
 
 df
 
 
-# In[8]:
+# In[142]:
 
 
 # Add columns to store results
@@ -87,14 +100,14 @@ df['eval_number_glove'] = ""
 df['corpus'] = df['corpus'].apply(lambda corpus: set(corpus.split(" ")))
 
 
-# In[9]:
+# In[143]:
 
 
-# Get name of all companies in eval dataset
+# Get name of all companies in eval dataset 
 vocab = set(df.legal_name)
 
 
-# In[10]:
+# In[144]:
 
 
 # Map SIREN to legal name and vice versa
@@ -108,16 +121,16 @@ for i,row in df.iterrows():
 
 # ### Create Result Dictionnary
 
-# In[12]:
+# In[145]:
 
 
 import pickle
 # Load common names dictionnary
-file = open('../utilities/legal_to_common_names.obj', 'rb')
+file = open('../utilities/legal_to_common_names.obj', 'rb') 
 legal_to_common_name = pickle.load(file)
 
 
-# In[13]:
+# In[146]:
 
 
 def add_eval_set(dataframe, legal_name, nearest_words,method):
@@ -141,7 +154,7 @@ def add_eval_set(dataframe, legal_name, nearest_words,method):
     return occurences_word
 
 
-# In[14]:
+# In[147]:
 
 
 def create_emb_dict(word):
@@ -152,7 +165,7 @@ def create_emb_dict(word):
     return emb_dict
 
 
-# In[15]:
+# In[148]:
 
 
 def get_nearest_ft(word):
@@ -160,28 +173,28 @@ def get_nearest_ft(word):
     return [[(y),round(x,2)] for x,y in nearest_words]
 
 
-# In[16]:
+# In[149]:
 
 
 import numpy as np
-def get_composed_word_vector(composed_word,wordVectors):
+def get_composed_word_vector(composed_word,wordVectors): 
     res = []
     for word in composed_word.split():
         if(word.lower() in wordVectors.vocab):
             res.append(wordVectors[word.lower()])
     if(len(res)==0):
-        return res
+        return res 
     return np.mean(res,axis=0)
 
 
-# In[17]:
+# In[150]:
 
 
 def get_most_similar(word,model,topn=10):
     res = []
     if(len(word.split(" ")) > 0):
-        vector = get_composed_word_vector(word,model_glove)
-    else:
+        vector = get_composed_word_vector(word,model)
+    else: 
         vector = model[word.lower()]
     if(len(vector)>0):
         nearest_words = model.most_similar([vector], topn=topn)
@@ -189,15 +202,15 @@ def get_most_similar(word,model,topn=10):
     return res
 
 
-# In[18]:
+# In[151]:
 
 
 def score2(legal_name,word_occurences):
     return round((word_occurences / len(df[(df['legal_name'] == legal_name)])),4)
+               
 
 
-
-# In[19]:
+# In[152]:
 
 
 def all_indices(value, qlist):
@@ -212,28 +225,28 @@ def all_indices(value, qlist):
     return indices
 
 
-# In[20]:
+# In[153]:
 
 
 def compute_score2(dataframe,nearest_words, legal_name,method):
     occurences_words = add_eval_set(df, legal_name,[x[0] for x in nearest_words],method)
-    for word in nearest_words:
+    for word in nearest_words: 
         word.append(score2(legal_name, occurences_words[word[0]]))
 
 
-# In[21]:
+# In[154]:
 
 
 def get_nearest_from_dict(dict_,legal_name,method):
     res = []
-    common_names_dict = dict_[legal_name]
+    common_names_dict = dict_[legal_name] 
     for common_name in common_names_dict.keys():
         #print(dict_[legal_name][common_name])
         res.append(dict_[legal_name][common_name][method])
     return [y for x in res for y in x]
 
 
-# In[22]:
+# In[155]:
 
 
 def getTime(start,end):
@@ -243,7 +256,7 @@ def getTime(start,end):
     return time_since_start
 
 
-# In[23]:
+# In[156]:
 
 
 def fusion(nearest_words):
@@ -257,13 +270,13 @@ def fusion(nearest_words):
     for pairs in list_of_pairs:
         if(len(pairs)>1):
             res.append(fusion_list([x for j,x in enumerate(nearest_words) if j in pairs ]))
-        else:
+        else: 
             res.append(nearest_words[pairs[0]])
     return res
+    
 
 
-
-# In[24]:
+# In[157]:
 
 
 def fusion_list(l):
@@ -271,7 +284,7 @@ def fusion_list(l):
     return [l[0][0], new_similarity, l[0][2]]
 
 
-# In[25]:
+# In[158]:
 
 
 import time
@@ -281,7 +294,7 @@ methods = ['ft','w2v','glove']
 # Create dictionnary with nearest vectors
 percent = 0
 start = time.time()
-for i,legal_name in enumerate(vocab):
+for i,legal_name in enumerate(vocab): 
     # Logging
     if(i % 150 == 0):
         time_ = getTime(start,time.time())
@@ -292,9 +305,9 @@ for i,legal_name in enumerate(vocab):
     siren = legal_n_to_siren[legal_name]
     if(siren in legal_to_common_name.keys()):
         common_names = legal_to_common_name[siren]
-        # For each common name compute nearest words per embedding technique
+        # For each common name compute nearest words per embedding technique 
         for common_n in common_names:
-            legal_name_dict[common_n] = create_emb_dict(common_n)
+            legal_name_dict[common_n] = create_emb_dict(common_n)     
     else:
         legal_name_dict[legal_name] = emb_dict
     legal_name_dict = defaultdict(list)
@@ -315,13 +328,25 @@ for i,legal_name in enumerate(vocab):
         legal_name_dict[method].insert(0,scores)
 
 
-# In[26]:
+# In[159]:
 
 
-df.to_csv('../results/results' + dt_string + '.csv')
+new_nearest
 
 
-# In[27]:
+# In[160]:
+
+
+df.sample(20)
+
+
+# In[161]:
+
+
+df.to_csv('results' + dt_string + '.csv')
+
+
+# In[162]:
 
 
 ftEval = df['eval_number_ft'].mean()
@@ -332,14 +357,81 @@ print(w2vEval)
 print(gloveEval)
 
 
-# In[311]:
+# In[37]:
 
 
 import json
 import codecs
 
-with codecs.open('../results/results-with-fusion.json', 'w',encoding='utf-8') as fp:
+with codecs.open('results-with-fusion.json', 'w',encoding='utf-8') as fp:
     json.dump(nearest,fp,ensure_ascii=False)
+
+
+# ### Prediction 
+
+# In[41]:
+
+
+# DataSetPath 
+prediction_path = utilities_path + ''
+
+
+# In[101]:
+
+
+df_prediction = pd.read_csv('../data/prediction.csv')
+df_prediction
+df_prediction['legal_name'] = df_prediction['siren'].apply(lambda siren: siren_to_legal_name[siren])
+df_prediction['prediction'] = ""
+df_prediction
+
+
+# In[78]:
+
+
+vocab_predictions  = set(df_prediction.siren)
+                         
+
+
+# In[120]:
+
+
+siren_to_emb = defaultdict()
+for siren in vocab_predictions: 
+    legal_name = siren_to_legal_name[siren]
+    vec_legal_name = get_composed_word_vector(legal_name,model_glove)  
+    siren_to_emb[siren] = vec_legal_name
+
+
+# In[126]:
+
+
+from operator import itemgetter
+def most_similar_legal_name(corpus,model):
+    vector_corpus = get_composed_word_vector(corpus,model)
+    results = []
+    for siren in vocab_predictions:
+        vec_legal_name = siren_to_emb[siren]
+        if(len(vec_legal_name)>0):
+            result = spatial.distance.cosine(vector_corpus, vec_legal_name)
+            results.append((result,siren_to_legal_name[siren]))
+    final_res = min(results,key=itemgetter(0)) 
+    return final_res[1]
+
+
+# In[127]:
+
+
+for i,row in df_prediction.iterrows():
+    if(i%250 == 0):
+        print("10%done")
+    df_prediction.prediction[i] = most_similar_legal_name(row['corpus'],model_glove)
+
+
+# In[128]:
+
+
+df_prediction
 
 
 # In[ ]:

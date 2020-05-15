@@ -1,21 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[39]:
-
-
-
-
 # # Train
 
 # ## SetUp directories
 
-# In[5]:
+# In[1]:
 
 
 import os
 # Location of models
-model_directory = '../model'
+model_directory = '../models'
 if(not os.path.exists(model_directory)):
     os.makedirs(model_directory)
 
@@ -25,14 +20,14 @@ if(not os.path.exists(model_directory)):
 # Adjust Path to your local GloVe Repo
 # https://github.com/stanfordnlp/GloVe
 
-# In[34]:
+# In[2]:
 
 
 # Path to utilities
 utilities_path = '../utilities'
 
 # Path of your local glove directory
-glove_path = '../utilities/GloVe/'
+glove_path = '../utilities/GloVe/'        
 train_path = '../data/trainFile.txt'
 
 #Glove Script location
@@ -41,11 +36,11 @@ utility_glove_script = '../utilities/demo.sh'
 # Dimension of vectors
 dim_vec = 300
 
-# Number of threads used during training, should be equal to number of cores if one wants to minimize training time
-threads = 2
+# Number of threads used during training, should be equal to number of cores if one wants to minimize training time 
+threads = 4
 
 
-# In[7]:
+# In[3]:
 
 
 from datetime import datetime
@@ -64,22 +59,22 @@ model_path_glove = global_path + "gloVe_"+ dt_string + txt_path
 
 # ## Fasttext
 
-# In[43]:
+# In[6]:
 
 
 import fasttext
 model = fasttext.train_unsupervised(train_path,thread=threads,epoch=9,dim=dim_vec)
 
 
-# In[44]:
+# In[11]:
 
 
-model.save_model(path_ft)
+model.save_model(path_ft_bin)
 
 
 # We only want to save the vectors at it will cost less storage space
 
-# In[47]:
+# In[12]:
 
 
 from fasttext import load_model
@@ -116,26 +111,28 @@ subprocess.run(["rm", path_ft_bin])
 
 # ## Word2Vec
 
-# In[6]:
+# In[13]:
 
 
 with open(train_path) as f:
     corpus = f.readlines()
 res = []
-for sent in corpus:
+for sent in corpus: 
     sent = sent[0:len(sent)-1]
     res.append(sent.split(" "))
 
 
-# In[7]:
+# In[16]:
 
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 from gensim.models import Word2Vec
-model = Word2Vec(res, size=dim_vec,window=5,negative=10, alpha=0.01,iter=9,
-                 min_count=5, workers=threads,sg=1,compute_loss=True)
+model = Word2Vec(res, size=300,window=5,negative=10, alpha=0.01,iter=9,
+                 min_count=5, workers=4,sg=1,compute_loss=True)
 
 
-# In[8]:
+# In[15]:
 
 
 from gensim.test.utils import common_texts, get_tmpfile
@@ -143,15 +140,15 @@ path = get_tmpfile(path_w2v)
 model.save(path_w2v)
 
 
-# ## Glove
-#
+# ## Glove 
+# 
 
 # In[48]:
 
 
 if(not os.path.exists(glove_path)):
     os.makedirs(glove_path)
-    subprocess.check_output("git clone https://github.com/stanfordnlp/GloVe",cwd =utilities_path,shell=True)
+    subprocess.check_output("git clone https://github.com/stanfordnlp/GloVe",cwd=utilities_path,shell=True)
     subprocess.check_output("make",cwd =glove_path,shell=True)
 
 

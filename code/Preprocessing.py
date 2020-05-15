@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
 # ## SetUp directories
 
 # In[1]:
@@ -25,23 +23,23 @@ if(not os.path.exists((data_directory))):
 
 corpus_file = 'corpus_check_long.csv'
 corpus_path = data_directory + corpus_file
-# We will create a temporary file with the results of the preprocessing this file will be deleted after
+# We will create a temporary file with the results of the preprocessing this file will be deleted after 
 #the execution of the script
 temp_file_eval = "../data/evalFile.txt"
 
-# File Name where we will store the training data
+# File Name where we will store the training data 
 train_path = data_directory + 'trainFile.txt'
 
 # File name where we will store the evaluation data
 eval_file = data_directory + 'eval.csv'
 
-# Prediction File
+# Prediction File 
 prediction_file = data_directory + 'prediction.csv'
 
-# Name of the column storing the article
+# Name of the column storing the article 
 article = 'corpus'
 
-utilities_path = '../utilities/'# DataSetPath
+utilities_path = '../utilities/'# DataSetPath 
 prediction_path = utilities_path + 'groupC_scrap.obj'
 prediction_csv_path = utilities_path + 'prediction.csv'
 
@@ -53,7 +51,7 @@ prediction_csv_path = utilities_path + 'prediction.csv'
 
 import pickle
 import pandas as pd
-file = open(prediction_path, 'rb')
+file = open(prediction_path, 'rb') 
 df_prediction = pd.DataFrame(pickle.load(file))
 df = pd.read_csv(corpus_path)
 
@@ -69,7 +67,7 @@ def get_corrupt_data(df):
         if (("�") in tmp) or (len(tmp.split())<50):
             indexNames.append(i)
     return indexNames
-
+    
 
 
 # In[5]:
@@ -77,20 +75,20 @@ def get_corrupt_data(df):
 
 def filter_dataframe(dataframe):
     # Remove corrupt Data and filter articles that have less than 50 words
-    indexNames = get_corrupt_data(dataframe)
+    indexNames = get_corrupt_data(dataframe)  
     dataframe.drop(indexNames , inplace=True)
-
+    
     # Filter companies that have at least 7 articles
     top = dataframe["siren"].value_counts()
     top = top.where(top>=7).dropna()
     topList = list(top.index)
     dataframe = dataframe[dataframe["siren"].isin(topList)]
-
+    
     # Filter articles longer than 1,000,000 characters
     dataframe = dataframe[dataframe[article].astype(str).map(len)<1000000]
-
+    
     return dataframe
-
+    
 
 
 # In[6]:
@@ -98,17 +96,17 @@ def filter_dataframe(dataframe):
 
 import re
 import string
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize 
 def cleaning(doc):
     doc = doc.replace('\n', ' ')
     doc = doc.replace('\r\n', ' ')
     doc = doc.replace('\r', ' ')
     doc = doc.replace('\t', ' ')
-    return doc
+    return doc 
 def remove_numbers(doc):
     doc = re.sub("\d+", "", doc)
     doc = doc.replace('m€', '')
-    doc = doc.replace('k€', '')
+    doc = doc.replace('k€', '')   
     return doc
 # Tokenize text
 def preprocessing(doc,train=False):
@@ -119,29 +117,29 @@ def preprocessing(doc,train=False):
         doc = doc.replace("«", " ")
         doc = doc.replace("»", " ")
 
-        # To lowercase
+        # To lowercase 
         doc = doc.lower()
-
+        
         # Remove url's
         doc = re.sub(r'^https?:\/\/.*[\r\n]*', ' ', doc, flags=re.MULTILINE)
-
+        
         # Cleaning
         doc = cleaning(doc)
-
+        
         # Remove numbers
         doc = remove_numbers(doc)
-
-
-        # Remove multiple wite spaces
+        
+    
+        # Remove multiple wite spaces 
         doc = re.sub(' +', ' ',doc)
-
+        
         # Remove unicode breaking character
         doc = doc.replace(u'\xa0', u' ')
-
-        if train:
+        
+        if train: 
             result = []
             sentences = sent_tokenize(doc)
-            for sent in sentences:
+            for sent in sentences: 
                    # Remove punctuation
                 sent = sent.translate(translator)
                 sent += "\n"
@@ -149,7 +147,7 @@ def preprocessing(doc,train=False):
             return "".join(result)
         else:
             doc += "\n"
-            return doc
+            return doc 
 
 
 # In[7]:
@@ -159,7 +157,7 @@ def read_file(path):
     with open(path) as f:
         content = f.readlines()
     return content
-
+    
 
 
 # In[8]:
@@ -183,7 +181,7 @@ def preprocess_and_write_to_file(dataframe,fileName='data',train=False,index=0):
             print("Thread " + str(index) + " processed " + str(counter) + "/" + str(total_len))
         preprocessed_text = preprocessing((row[article]),train)
         f.write(preprocessed_text)  # python will convert \n to os.linesep
-    f.close()
+    f.close()  
 
 
 # In[10]:
